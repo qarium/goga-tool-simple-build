@@ -13,8 +13,8 @@ three review presets wherever the authored configuration is silent:
 | Path | Value |
 |---|---|
 | `build.review.strategy` | `short` |
-| `build.review.additional.patience` | `2` |
-| `build.review.additional.max_iterations` | `5` |
+| `build.review.additional.patience` | `1` |
+| `build.review.additional.max_iterations` | `3` |
 
 Absent intermediate branches (`build.review`, `build.review.additional`)
 materialize on their own — a minimal configuration of `language` alone is enough.
@@ -34,8 +34,8 @@ build:
   review:
     strategy: short
     additional:
-      patience: 2
-      max_iterations: 5
+      patience: 1
+      max_iterations: 3
 ```
 
 Check the effective values after a run with `goga config` — it prints the amended
@@ -52,10 +52,10 @@ no error — while the remaining silent leaves still receive their presets:
 build:
   review:
     additional:
-      patience: 4   # authored — wins over the preset 2
+      patience: 4   # authored — wins over the preset 1
 ```
 
-Effective: `strategy: short`, `patience: 4`, `max_iterations: 5`.
+Effective: `strategy: short`, `patience: 4`, `max_iterations: 3`.
 
 ## The one deliberate conflict
 

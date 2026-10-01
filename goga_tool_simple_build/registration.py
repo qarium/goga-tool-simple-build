@@ -41,5 +41,5 @@ def build_presets(context: ConfigAmendment):
         raise ValueError(_CONFLICT_MESSAGE)
 
     context.set("build.review.strategy", "short")
-    context.set("build.review.additional.patience", 2)
-    context.set("build.review.additional.max_iterations", 5)
+    context.set("build.review.additional.patience", 1)
+    context.set("build.review.additional.max_iterations", 3)

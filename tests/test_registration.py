@@ -7,8 +7,8 @@ from goga_tool_simple_build import registration
 
 EXPECTED_PRESETS = [
     ("build.review.strategy", "short"),
-    ("build.review.additional.patience", 2),
-    ("build.review.additional.max_iterations", 5),
+    ("build.review.additional.patience", 1),
+    ("build.review.additional.max_iterations", 3),
 ]
 
 

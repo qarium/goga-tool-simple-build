@@ -49,8 +49,8 @@ Annotations: |
     2. If the authored value is present and is not short — raise an exception whose message
        names the path build.review.strategy and never the authored value
     3. Buffer three apply-where-silent amendments through `context`: build.review.strategy
-       set to short, build.review.additional.patience set to 2,
-       build.review.additional.max_iterations set to 5
+       set to short, build.review.additional.patience set to 1,
+       build.review.additional.max_iterations set to 3
 
     Requirements:
     - Amendments are unconditional — the only deliberate read of the configuration is the

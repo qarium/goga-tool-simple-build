@@ -58,8 +58,8 @@ def test_integration_minimal_config_receives_presets(tmp_path: Path, authored_co
 
     assert result.returncode == 0
     assert "strategy: short" in result.stdout
-    assert "patience: 2" in result.stdout
-    assert "max_iterations: 5" in result.stdout
+    assert "patience: 1" in result.stdout
+    assert "max_iterations: 3" in result.stdout
     assert "config amendments: 3 applied" in result.stderr
     assert "- simple-build set build.review.strategy" in result.stderr
     assert "- simple-build set build.review.additional.patience" in result.stderr
@@ -77,7 +77,7 @@ def test_integration_authored_values_win_over_presets(tmp_path: Path, authored_c
     assert result.returncode == 0
     assert "patience: 4" in result.stdout
     assert "strategy: short" in result.stdout
-    assert "max_iterations: 5" in result.stdout
+    assert "max_iterations: 3" in result.stdout
     assert "- simple-build set build.review.strategy" in result.stderr
     assert "- simple-build set build.review.additional.max_iterations" in result.stderr
     assert "- simple-build set build.review.additional.patience" not in result.stderr
