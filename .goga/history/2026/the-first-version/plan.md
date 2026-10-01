@@ -684,8 +684,8 @@ imports nothing from goga at runtime, so there is nothing to patch):
   (the platform's projection is keyword-based) and `register_hooks(hooks=registrar)`
   (the platform calls positionally — both shapes are exercised across the suite).
 
-- [ ] **STEP 0 (DECLARATION)** — declare Task 2 as the task being executed.
-- [ ] **STEP 1 (CONTRACT TESTS)** — write the contract tests; they must FAIL now
+- [x] **STEP 0 (DECLARATION)** — declare Task 2 as the task being executed.
+- [x] **STEP 1 (CONTRACT TESTS)** — write the contract tests; they must FAIL now
   (`registration` module does not exist; facade is empty):
   - Create `tests/test_registration.py` with the stand-ins above and
     `test_register_hooks_subscribes_single_review_hook` (design scenario, verbatim):
@@ -729,7 +729,7 @@ imports nothing from goga at runtime, so there is nothing to patch):
       is the only guard against that silent failure mode.
   - Run both: `/opt/project/venv/bin/python -m pytest tests/test_registration.py
     tests/test_init.py -v` → both fail (expected).
-- [ ] **STEP 2 (IMPLEMENTATION)** — implement via the REPL cycle (M4):
+- [x] **STEP 2 (IMPLEMENTATION)** — implement via the REPL cycle (M4):
   - Create `goga_tool_simple_build/registration.py` exactly per the module layout and
     algorithm above (future annotations, `TYPE_CHECKING` platform imports, both
     routines, Google-style docstrings, blank-line block separation).
@@ -747,10 +747,10 @@ imports nothing from goga at runtime, so there is nothing to patch):
     `/opt/project/venv/bin/python -c "import goga_tool_simple_build as f; from
     goga_tool_simple_build import registration; assert f.build_presets is
     registration.build_presets and f.register_hooks is registration.register_hooks"`.
-- [ ] **STEP 3 (INTERFACE VERIFICATION)** — run the STEP 1 contract tests:
+- [x] **STEP 3 (INTERFACE VERIFICATION)** — run the STEP 1 contract tests:
   `/opt/project/venv/bin/python -m pytest tests/test_registration.py tests/test_init.py
   -v` → both pass (implemented interfaces match the contract).
-- [ ] **STEP 4 (LOGIC TESTS)** — write the behavioral tests (design scenarios,
+- [x] **STEP 4 (LOGIC TESTS)** — write the behavioral tests (design scenarios,
   verbatim) into `tests/test_registration.py` and `tests/test_init.py`:
   - `tests/test_registration.py` —
     `test_build_presets_buffers_three_presets_when_branches_absent` (positive):
@@ -945,12 +945,12 @@ imports nothing from goga at runtime, so there is nothing to patch):
       subprocess call would empty the scenario of meaning. The assertion runs on the
       child's exit code, not on captured output. State the deviation in the test
       docstring.
-- [ ] **STEP 5 (DEBUGGING)** — run the full suite:
+- [x] **STEP 5 (DEBUGGING)** — run the full suite:
   `/opt/project/venv/bin/python -m pytest tests/ -x` — fix the **implementation**
   (never the tests, never the contract) until all tests pass; every fix goes through
   the REPL cycle (M4: reproduce interactively → edit → hot-reload → re-evaluate →
   migrate).
-- [ ] **STEP 6 (CONTRACT RE-VERIFICATION)** — verify every contract obligation is
+- [x] **STEP 6 (CONTRACT RE-VERIFICATION)** — verify every contract obligation is
   still met: facade `__all__` exact and both names importable from
   `goga_tool_simple_build` by identity (facade check command below); both signatures
   keyword-capable with the declared parameter names; single subscribe envelope; three
@@ -959,15 +959,24 @@ imports nothing from goga at runtime, so there is nothing to patch):
   of the full suite).
   Facade check (conventions pattern):
   `/opt/project/venv/bin/python -c "from goga_tool_simple_build import build_presets, register_hooks; print(register_hooks, build_presets)"`.
-- [ ] **STEP 7 (LINT)** — M3 commands:
+- [x] **STEP 7 (LINT)** — M3 commands:
   `/opt/project/venv/bin/ruff check goga_tool_simple_build/ tests/` and
   `/opt/project/venv/bin/ruff format --check goga_tool_simple_build/ tests/` — fix
   formatting and decompose if necessary.
-- [ ] **STEP 8 (COMPLETION)** — mark this task's checkboxes completed; run the
+- [x] **STEP 8 (COMPLETION)** — mark this task's checkboxes completed; run the
   pre-commit gate (M3 rule 4) and create the local commit of this task
   (`goga_tool_simple_build/registration.py`, `goga_tool_simple_build/__init__.py`,
   `tests/test_registration.py`, `tests/test_init.py`; suggested message:
   `feat: implement review-presets tool contract`). → REVIEW → APPROVAL → NEXT TASK.
+  Execution note (environment): every `/opt/project/venv` command of this task ran in
+  the Task-1 stand-in venv `/tmp/scratch-dev-venv` — `/opt/project` was re-attempted
+  and refused again (`Permission denied`, operator escalation still pending). Results:
+  STEP 1 RED (ImportError on both suites), STEP 3 GREEN; REPL cycle verified all
+  fragments (call shapes, absence traversal, conflict message character-for-character,
+  raise precedes every set) and the fresh-child facade identity; suite 14/14
+  (1 + 11 + 2, matching the Task-3 arithmetic); ruff findings fixed in tests only
+  (import order, `check=False`, `pytest.raises` `match=`); `goga lint` in the
+  workspace still `cells: 1 errors: 0`.
 
 ### Task 3: Platform integration tests through a real `goga config` run (integration tests)
 
