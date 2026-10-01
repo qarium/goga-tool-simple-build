@@ -1011,7 +1011,7 @@ conflict stopping the command without leaking the value.
 
 **CRITICAL: `CODEMANIFEST` files — read-only contract definitions. Do NOT modify them. If implementation does not match the contract, fix the implementation — never fix the contract.**
 
-- [ ] Create `tests/test_integration.py`:
+- [x] Create `tests/test_integration.py`:
   - Module docstring states the recorded deviation (real subprocess = system under
     test).
   - Skip guard (M2 rule 8): `pytest.mark.skipif(importlib.util.find_spec("goga") is
@@ -1023,7 +1023,7 @@ conflict stopping the command without leaking the value.
     <path>], cwd=<tmp_path>, capture_output=True, text=True, timeout=120)` —
     `sys.executable` is the venv interpreter, so the child goga enumerates the
     editable-installed tool (fact 11).
-- [ ] Scenario A — `test_integration_minimal_config_receives_presets`: authored
+- [x] Scenario A — `test_integration_minimal_config_receives_presets`: authored
   `language: python` only; query `build.review`:
   - `result.returncode == 0`
   - stdout contains `strategy: short`, `patience: 2`, `max_iterations: 5`
@@ -1034,7 +1034,7 @@ conflict stopping the command without leaking the value.
     `- simple-build set build.review.additional.max_iterations` (fact 12);
   - the authored `.goga/config.yml` is byte-identical after the run (compare content
     before/after).
-- [ ] Scenario B — `test_integration_authored_values_win_over_presets`: authored
+- [x] Scenario B — `test_integration_authored_values_win_over_presets`: authored
   `build.review.additional.patience: 4`; query `build.review`:
   - `result.returncode == 0`
   - stdout contains `patience: 4` (authored wins) **and** `strategy: short` and
@@ -1044,19 +1044,33 @@ conflict stopping the command without leaking the value.
     contain `- simple-build set build.review.additional.patience` (the set on the
     non-silent path is dropped silently);
   - the authored file is byte-identical after the run.
-- [ ] Scenario C — `test_integration_strategy_conflict_stops_command`: authored
+- [x] Scenario C — `test_integration_strategy_conflict_stops_command`: authored
   `build.review.strategy: thorough`; query `language`:
   - `result.returncode != 0` (hard action stops the command — fact 13);
   - stderr contains `hook build_presets of tool simple-build failed on
     config.amend_config` and `build.review.strategy` (wrapper format, fact 10);
   - `thorough` appears in neither stdout nor stderr (output secrecy).
-- [ ] Run validation: `/opt/project/venv/bin/python -m pytest tests/ -x` → all tests
+- [x] Run validation: `/opt/project/venv/bin/python -m pytest tests/ -x` → all tests
   pass (13 test functions — 17 collected items after parametrization: 1 + 11 + 2 + 3).
-- [ ] Lint (M3): `/opt/project/venv/bin/ruff check goga_tool_simple_build/ tests/` and
+- [x] Lint (M3): `/opt/project/venv/bin/ruff check goga_tool_simple_build/ tests/` and
   `/opt/project/venv/bin/ruff format --check goga_tool_simple_build/ tests/`.
-- [ ] Pre-commit gate (M3 rule 4) and local commit of this task
+- [x] Pre-commit gate (M3 rule 4) and local commit of this task
   (`tests/test_integration.py`; suggested message:
   `test: platform integration via goga config`).
+  Execution note (environment): `/opt/project` was re-attempted this task
+  (`mkdir -p /opt/project` → `Permission denied`; operator escalation still pending),
+  so every `/opt/project/venv` command ran in the Task-1 stand-in venv
+  `/tmp/scratch-dev-venv` (goga 2.0.1, editable install of the workspace). Before
+  pinning the tests, all three scenarios were probed live in a throwaway directory
+  (M4 REPL cycle) and matched facts 10–13 exactly: A → rc 0, `strategy: short` /
+  `patience: 2` / `max_iterations: 5` on stdout, `config amendments: 3 applied` plus
+  the three `set` lines on stderr, authored file byte-identical; B → `patience: 4`
+  authored-wins with `2 applied` (patience set dropped silently); C → rc 1 with the
+  wrapper error, `thorough` in neither stream. Suite 17/17 (1 + 11 + 2 + 3, exactly
+  the planned arithmetic); ruff check and format clean on first run; facade
+  accessibility and import-cleanliness commands pass; `goga lint` → `cells: 1
+  errors: 0`; CODEMANIFEST and `.usages/` untouched (git status shows only
+  `tests/test_integration.py`).
 
 ---
 
@@ -1080,37 +1094,37 @@ All commands run in the development venv (conventions: virtualenv execution).
 
 ## Completion Criteria
 
-- [ ] Every contract entity is implemented in the correct `location` (both routines in
+- [x] Every contract entity is implemented in the correct `location` (both routines in
       `goga_tool_simple_build/registration.py`)
-- [ ] Every contract entity is accessible from the facade
+- [x] Every contract entity is accessible from the facade
       (`goga_tool_simple_build.__all__ == ["build_presets", "register_hooks"]`, by
       identity)
-- [ ] Properties and methods match the declared API (Routines — signatures exact:
+- [x] Properties and methods match the declared API (Routines — signatures exact:
       `register_hooks(hooks: ...)`, `build_presets(context: ...)`, nothing returned)
-- [ ] Descriptions are reflected in behavior (single subscribe envelope; guard read;
+- [x] Descriptions are reflected in behavior (single subscribe envelope; guard read;
       exact raise message, value-free, before any set; three unconditional
       apply-where-silent sets; footprint exactly the three leaf paths)
-- [ ] Contract dependencies are met (no `Imports` — nothing to satisfy; platform types
+- [x] Contract dependencies are met (no `Imports` — nothing to satisfy; platform types
       under `TYPE_CHECKING` only)
-- [ ] Re-exports are accessible from the facade (identity re-export through `__all__`)
-- [ ] Every coding task followed the TDD workflow (contract tests → code →
+- [x] Re-exports are accessible from the facade (identity re-export through `__all__`)
+- [x] Every coding task followed the TDD workflow (contract tests → code →
       verification → logic tests → debugging → re-verification → lint)
-- [ ] Contract tests and logic tests cover facade, API, and behavior within each
+- [x] Contract tests and logic tests cover facade, API, and behavior within each
       coding task
-- [ ] Integration tests exist where cross-entity scenarios require them (Task 3 —
+- [x] Integration tests exist where cross-entity scenarios require them (Task 3 —
       real platform, 3 scenarios)
-- [ ] No package boundary was expanded (no new cells, no new facade surface, no CLI)
-- [ ] `CODEMANIFEST` files were not modified (contract is read-only; `goga lint`
+- [x] No package boundary was expanded (no new cells, no new facade surface, no CLI)
+- [x] `CODEMANIFEST` files were not modified (contract is read-only; `goga lint`
       still reports `cells: 1 errors: 0`)
-- [ ] All validation commands pass (full suite: 13 test functions, 17/17 collected
+- [x] All validation commands pass (full suite: 13 test functions, 17/17 collected
       items; ruff check and format clean)
-- [ ] Every Usages entry is mentioned in at least one task (`conventions` — all tasks;
+- [x] Every Usages entry is mentioned in at least one task (`conventions` — all tasks;
       `hook_registration`, `config_amendment` — Task 2; `config_amendment`,
       `review-presets.md` — Task 3; `goga_dependency` — Tasks 1–2)
-- [ ] Mandatory rules M1–M4 were followed throughout: coding style per `conventions`;
+- [x] Mandatory rules M1–M4 were followed throughout: coding style per `conventions`;
       test writing per `conventions`; ruff lint + format enforced at every stage and
       through the pre-commit gate on every local commit; the REPL cycle
       (continuous interactive evaluation, hot reloading, migration to source files)
       structured every coding action
-- [ ] `.usages/` files untouched (existing `review-presets.md` verified current; no
+- [x] `.usages/` files untouched (existing `review-presets.md` verified current; no
       new files planned)
