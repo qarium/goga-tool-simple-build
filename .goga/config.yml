@@ -19,8 +19,8 @@ build:
     strategy: short
     base_ref: *base-ref
     additional:
-      patience: 2
-      max_iterations: 5
+      patience: 1
+      max_iterations: 3
     env:
       <<: *claude-env
       ANTHROPIC_DEFAULT_OPUS_MODEL: "glm-5.3[1m]"
