@@ -4,10 +4,6 @@ A [goga](https://pypi.org/project/goga/) hook tool that gives simple builds a ch
 review pass by default: the short review strategy plus a bounded external review, applied
 wherever the project author left the review knobs unwritten.
 
-## Documentation
-
-Full documentation is published at <https://qarium.github.io/goga-tool-simple-build/>.
-
 ## How it works
 
 The package registers exactly one hook — `build_presets` on the `config / amend_config`
@@ -74,6 +70,13 @@ RUN cd /tmp/project && goga install simple-build && rm -rf /tmp/project
 
 USER goga
 ```
+
+## Documentation
+
+- [Review presets](review-presets.md) — what an installed tool guarantees: the presets table,
+  authored-wins, and the one deliberate conflict
+- [Architecture](architecture.md) — the cell map and the amendment data flow
+- [API reference](api/facade.md) — the package facade contract
 
 ## Development
 
