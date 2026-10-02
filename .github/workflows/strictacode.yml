@@ -33,11 +33,3 @@ jobs:
           working-directory: goga_tool_simple_build
         env:
           STRICTACODE_SCORE: 30
-          STRICTACODE_RP: 40
-          STRICTACODE_OP: 40
-          STRICTACODE_IMB: 20
-          STRICTACODE_DENSITY: 20
-          STRICTACODE_RP_DIFF: 5
-          STRICTACODE_OP_DIFF: 5
-          STRICTACODE_DENSITY_DIFF: 5
-          STRICTACODE_SCORE_DIFF: 3
