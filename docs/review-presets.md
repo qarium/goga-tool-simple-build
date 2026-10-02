@@ -14,7 +14,7 @@ three review presets wherever the authored configuration is silent:
 |---|---|
 | `build.review.strategy` | `short` |
 | `build.review.additional.patience` | `1` |
-| `build.review.additional.max_iterations` | `3` |
+| `build.review.additional.max_iterations` | `3` — or the authored `build.review.max_iterations` |
 
 Absent intermediate branches (`build.review`, `build.review.additional`)
 materialize on their own — a minimal configuration of `language` alone is enough.
@@ -57,9 +57,10 @@ Configuration values never appear in any informational output.
 
 ## Authoring your own values
 
-Any review knob written explicitly wins. Author `patience` or `max_iterations`
-(or `strategy: short`) and the tool stays silent for those leaves — no warning,
-no error — while the remaining silent leaves still receive their presets:
+Any review knob written explicitly wins. Author `patience` or
+`build.review.additional.max_iterations` (or `strategy: short`) and the tool stays
+silent for those leaves — no warning, no error — while the remaining silent leaves
+still receive their presets:
 
 ```yaml
 build:
@@ -70,7 +71,24 @@ build:
 
 Effective: `strategy: short`, `patience: 4`, `max_iterations: 3`.
 
-## The one deliberate conflict
+### Mapping the review-level iteration cap
+
+The external review cap also follows the review-level knob: an authored
+`build.review.max_iterations` maps into `build.review.additional.max_iterations`
+wherever the latter is silent:
+
+```yaml
+build:
+  review:
+    max_iterations: 7   # authored — maps into the external review cap
+```
+
+Effective: `strategy: short`, `patience: 1`, `max_iterations: 7` — both review
+loops share the authored cap. The mapping contributes a preset, not an override:
+a directly authored `build.review.additional.max_iterations` would still win,
+except that authoring both caps at once is a conflict (below).
+
+## The deliberate conflicts
 
 Authoring `build.review.strategy` with a value other than `short` conflicts with
 the tool's purpose. Every config-consuming goga command stops with a clean error
@@ -90,6 +108,22 @@ build:
 An authored empty strategy (`""`) is a conflict too — it is authored, not silent,
 and the tool never normalizes authored values. Remove the authored strategy or
 uninstall the tool to resolve the conflict.
+
+Authoring both `build.review.max_iterations` and
+`build.review.additional.max_iterations` is a settings conflict — two competing
+iteration caps for the same review. The command stops the same way, the error
+names both paths and never the values:
+
+```yaml
+build:
+  review:
+    max_iterations: 7          # conflict together with the line below —
+    additional:
+      max_iterations: 15       # every goga command stops
+```
+
+Remove one of the authored caps (keep the review-level one to feed the mapping,
+or the additional one to pin the external cap directly) or uninstall the tool.
 
 ## Side effects and reversibility
 

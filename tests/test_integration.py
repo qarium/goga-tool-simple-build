@@ -95,3 +95,58 @@ def test_integration_strategy_conflict_stops_command(tmp_path: Path, authored_co
     assert "build.review.strategy" in result.stderr
     assert "thorough" not in result.stdout
     assert "thorough" not in result.stderr
+
+
+def test_integration_authored_review_iterations_map_into_external_cap(
+    tmp_path: Path,
+    authored_config: Callable[[str], Path],
+) -> None:
+    """Maps the authored review-level iteration cap into the external review cap."""
+    config_path = authored_config("language: python\nbuild:\n  review:\n    max_iterations: 7\n")
+
+    before = config_path.read_text(encoding="utf-8")
+    result = _run_goga_config(tmp_path, "build.review")
+
+    assert result.returncode == 0
+    assert "max_iterations: 7" in result.stdout
+    assert "config amendments: 3 applied" in result.stderr
+    assert "- simple-build set build.review.additional.max_iterations" in result.stderr
+    assert config_path.read_text(encoding="utf-8") == before
+
+
+def test_integration_authored_additional_iterations_win_over_default(
+    tmp_path: Path,
+    authored_config: Callable[[str], Path],
+) -> None:
+    """Keeps the authored external cap and silently drops the preset for that leaf."""
+    config_path = authored_config("language: python\nbuild:\n  review:\n    additional:\n      max_iterations: 9\n")
+
+    before = config_path.read_text(encoding="utf-8")
+    result = _run_goga_config(tmp_path, "build.review")
+
+    assert result.returncode == 0
+    assert "max_iterations: 9" in result.stdout
+    assert "- simple-build set build.review.additional.max_iterations" not in result.stderr
+    assert "- simple-build set build.review.strategy" in result.stderr
+    assert config_path.read_text(encoding="utf-8") == before
+
+
+def test_integration_both_iteration_caps_authored_stop_command(
+    tmp_path: Path,
+    authored_config: Callable[[str], Path],
+) -> None:
+    """Stops the command on the iteration-cap conflict without leaking the authored values."""
+    authored_config(
+        "language: python\nbuild:\n  review:\n    max_iterations: 77\n    additional:\n      max_iterations: 1515\n"
+    )
+
+    result = _run_goga_config(tmp_path, "language")
+
+    assert result.returncode != 0
+    assert "hook build_presets of tool simple-build failed on config.amend_config" in result.stderr
+    assert "build.review.max_iterations" in result.stderr
+    assert "build.review.additional.max_iterations" in result.stderr
+    assert "77" not in result.stdout
+    assert "1515" not in result.stdout
+    assert "77" not in result.stderr
+    assert "1515" not in result.stderr

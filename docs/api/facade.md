@@ -28,8 +28,8 @@ Subscribe the tool's single review-presets hook to the configuration amendment a
 
 ### `build_presets(context: ConfigAmendment)`
 
-The amendment hook — contribute the three simple-build review presets and guard the strategy
-conflict.
+The amendment hook — contribute the three simple-build review presets, map the review-level
+iteration cap, and guard the two conflicts.
 
 - `context`: the per-tool read-and-amend view over the authored configuration
 
@@ -39,17 +39,22 @@ Algorithm:
    branches read as absent
 2. If the authored value is present and is not `short` — raise an exception whose message
    names the path `build.review.strategy` and never the authored value
-3. Buffer three apply-where-silent amendments through `context`: `build.review.strategy` set
+3. Read the authored leaves `build.review.max_iterations` and
+   `build.review.additional.max_iterations`; absent branches read as absent
+4. If both iteration-cap leaves are present — raise an exception whose message names the two
+   paths and never the authored values
+5. Buffer three apply-where-silent amendments through `context`: `build.review.strategy` set
    to `short`, `build.review.additional.patience` set to `1`,
-   `build.review.additional.max_iterations` set to `3`
+   `build.review.additional.max_iterations` set to the authored
+   `build.review.max_iterations` when present, otherwise to `3`
 
-The amendments are unconditional — the only deliberate read of the configuration is the
-single guard leaf of step 1. Authored-wins is owned by the merge layer and is never
-re-derived here. The exact write footprint is the three leaf paths of step 3 and nothing
-else: no other configuration paths, no tasks-pass settings, no environment values. The hook
-never validates agent presence and never uses the override form of amendment — the presets
-never overwrite authored values. Configuration values are never printed or embedded in any
-output or error message.
+The amendments are unconditional — the deliberate reads of the configuration are the guard
+leaf of step 1 and the two iteration-cap leaves of step 3. Authored-wins is owned by the
+merge layer and is never re-derived here. The exact write footprint is the three leaf paths
+of step 5 and nothing else: no other configuration paths, no tasks-pass settings, no
+environment values. The hook never validates agent presence and never uses the override form
+of amendment — the presets never overwrite authored values. Configuration values are never
+printed or embedded in any output or error message.
 
 ## The presets
 
@@ -57,11 +62,12 @@ output or error message.
 |---|---|
 | `build.review.strategy` | `short` |
 | `build.review.additional.patience` | `1` |
-| `build.review.additional.max_iterations` | `3` |
+| `build.review.additional.max_iterations` | `3` — or the authored `build.review.max_iterations` |
 
-The values are fixed constants — there is no tool-own configuration to tune them with. What
-an installed tool guarantees in practice is documented in
-[Review presets](../review-presets.md).
+The first two values are fixed constants; the iteration cap defaults to `3` and follows the
+authored `build.review.max_iterations` when the project sets it. Beyond that mapping there is
+no tool-own configuration to tune the presets with. What an installed tool guarantees in
+practice is documented in [Review presets](../review-presets.md).
 
 ## Preconditions and side effects
 
@@ -71,5 +77,6 @@ an installed tool guarantees in practice is documented in
   in-memory configuration of each run — the authored `.goga/config.yml` stays
   byte-identical.
 - Failures surface as clean command errors through the hard action; the tool's whole
-  contribution is discarded — nothing partial applies. The single deliberate failure is the
-  strategy conflict; a broken package import is the single remaining fatal case.
+  contribution is discarded — nothing partial applies. The deliberate failures are the
+  strategy conflict and the iteration-cap conflict; a broken package import is the single
+  remaining fatal case.
