@@ -39,7 +39,8 @@ Annotations: |
 "build_presets(context: ConfigAmendment)":
   location: registration.py
   annotations: |
-    Contribute the three simple-build review presets and guard the strategy conflict.
+    Contribute the three simple-build review presets, map the review-level iteration cap,
+    and guard the two conflicts.
 
     `context`: read-and-amend view over the authored configuration, delivered per `config_amendment`
 
@@ -48,20 +49,25 @@ Annotations: |
        absent branches read as absent
     2. If the authored value is present and is not short — raise an exception whose message
        names the path build.review.strategy and never the authored value
-    3. Buffer three apply-where-silent amendments through `context`: build.review.strategy
+    3. Read the authored leaves build.review.max_iterations and
+       build.review.additional.max_iterations; absent branches read as absent
+    4. If both iteration-cap leaves are present — raise an exception whose message names
+       the two paths and never the authored values
+    5. Buffer three apply-where-silent amendments through `context`: build.review.strategy
        set to short, build.review.additional.patience set to 1,
-       build.review.additional.max_iterations set to 3
+       build.review.additional.max_iterations set to the authored build.review.max_iterations
+       when present, otherwise to 3
 
     Requirements:
-    - Amendments are unconditional — the only deliberate read of the configuration is the
-      single guard leaf of step 1
+    - Amendments are unconditional — the deliberate reads of the configuration are the
+      guard leaf of step 1 and the two iteration-cap leaves of step 3
     - Authored-wins is owned by the merge layer — never re-derived here
-    - The exact footprint is the three leaf paths of step 3 and nothing else
+    - The exact write footprint is the three leaf paths of step 5 and nothing else
 
     Constraints:
     - Never use the override form of amendment — the presets never overwrite authored values
     - Never print or embed configuration values in any output or error message
-    - Do not validate agent presence or any leaf beyond the strategy conflict
+    - Do not validate agent presence or any leaf beyond the two conflicts
 
 ---
 
@@ -69,5 +75,6 @@ Author: Goga
 CreatedAt: 01/10/26
 Description: |
   Review presets for simple builds: the tool's single subscription to the goga
-  configuration amendment action, contributing the three fixed review leaves and
-  guarding the strategy conflict.
+  configuration amendment action, contributing the three review leaves — the
+  external iteration cap mapped from the authored review-level cap — and
+  guarding the strategy and iteration-cap conflicts.

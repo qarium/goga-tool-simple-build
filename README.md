@@ -16,7 +16,8 @@ amendments:
 
 - `build.review.strategy` set to `short` — the lightweight review form;
 - `build.review.additional.patience` set to `1`;
-- `build.review.additional.max_iterations` set to `3` — together bounding the external
+- `build.review.additional.max_iterations` set to `3` — or to the authored
+  `build.review.max_iterations` when the project sets it — together bounding the external
   review.
 
 Each preset applies only where the authored configuration is silent at the path. Authored-wins
@@ -25,10 +26,14 @@ that already encodes its review budget keeps it, and nothing is persisted — th
 `.goga/config.yml` stays byte-identical, and removing the tool returns the project to exactly
 its authored behavior.
 
-The only deliberate read of the authored configuration is the conflict guard: an authored
-`build.review.strategy` other than `short` conflicts with the tool's purpose and stops the
-hosting command with a clean error naming the path — never the authored value. Removing the
-authored strategy or uninstalling the tool resolves the conflict.
+The deliberate reads of the authored configuration are the two conflict guards and the
+iteration-cap mapping. An authored `build.review.strategy` other than `short` conflicts with
+the tool's purpose; authoring both `build.review.max_iterations` and
+`build.review.additional.max_iterations` is a settings conflict. Each stops the hosting
+command with a clean error naming the paths — never the authored values — and removing the
+conflicting authored value or uninstalling the tool resolves it. An authored
+`build.review.max_iterations` alone maps into the external review cap wherever
+`build.review.additional.max_iterations` is silent.
 
 ## Installation
 

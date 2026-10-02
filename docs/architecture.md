@@ -30,15 +30,20 @@ surface — the host-side commands (`build`, `pipeline`, `lint`, `contract`, `in
 2. The registration subscribes exactly one hook: address `config` / `amend_config`, name
    `build_presets`.
 3. The platform delivers a `ConfigAmendment` context to the hook.
-4. The hook reads exactly the guard-leaf chain `build.review.strategy` from the context's
-   configuration — absent intermediate branches read as absent; no neighboring leaf is read.
+4. The hook reads the guard-leaf chain `build.review.strategy` from the context's
+   configuration — absent intermediate branches read as absent; no neighboring leaf is read
+   before the guard resolves.
 5. An authored strategy other than `short` raises: the platform stops the hosting command
    with a clean error naming the tool, the action, and the path — never the authored value —
    and the tool's whole contribution is discarded.
-6. Otherwise the hook buffers three apply-where-silent amendments through `context.set`:
+6. The hook reads the iteration-cap leaves `build.review.max_iterations` and
+   `build.review.additional.max_iterations` — absent branches read as absent. When both are
+   authored, the hook raises the same way: the error names both paths, never the values.
+7. Otherwise the hook buffers three apply-where-silent amendments through `context.set`:
    `build.review.strategy` = `short`, `build.review.additional.patience` = `1`,
-   `build.review.additional.max_iterations` = `3`.
-7. The platform merge keeps authored values per path — the presets fill only what the author
+   `build.review.additional.max_iterations` = the authored `build.review.max_iterations`
+   when present, otherwise `3`.
+8. The platform merge keeps authored values per path — the presets fill only what the author
    left silent — and prints the amendment summary to stderr. The amended configuration exists
    only in-memory, for the duration of the run.
 
@@ -50,8 +55,10 @@ surface — the host-side commands (`build`, `pipeline`, `lint`, `contract`, `in
 - The facade module stays import-clean — a broken import is fatal to every goga command.
 - The hook is a pure function of the delivered context: no state, no cache, no clock or
   environment reads; identical facts produce the identical contribution.
-- The read footprint is the guard-leaf chain only; the write footprint is exactly the three
-  leaf paths — no other configuration path, no tasks-pass settings, no environment values.
+- The read footprint is the strategy guard-leaf chain plus the two iteration-cap chains
+  (`build.review.max_iterations`, `build.review.additional.max_iterations`); the write
+  footprint is exactly the three leaf paths — no other configuration path, no tasks-pass
+  settings, no environment values.
 - No agent validation of any kind: the missing-agent error belongs to the goga platform's
   agent value guard and inheritance.
 - Failures propagate as clean command errors through the hard action — no internal exception

@@ -8,9 +8,14 @@ if TYPE_CHECKING:
     from goga.config.hooks.amendments import ConfigAmendment
     from goga.hooks.tools.registration import HookRegistrar
 
-_CONFLICT_MESSAGE = (
+_STRATEGY_CONFLICT_MESSAGE = (
     "authored value at build.review.strategy conflicts with the tool's purpose; "
     "remove the authored strategy or uninstall the tool"
+)
+
+_ITERATIONS_CONFLICT_MESSAGE = (
+    "authored values at build.review.max_iterations and build.review.additional.max_iterations conflict; "
+    "remove one of the authored iteration caps or uninstall the tool"
 )
 
 
@@ -24,13 +29,15 @@ def register_hooks(hooks: HookRegistrar):
 
 
 def build_presets(context: ConfigAmendment):
-    """Contribute the three simple-build review presets and guard the strategy conflict.
+    """Contribute the three simple-build review presets, map the review-level iteration cap, guard the conflicts.
 
     Args:
         context: read-and-amend view over the authored configuration.
 
     Raises:
         ValueError: the authored value at build.review.strategy conflicts with the tool's purpose.
+        ValueError: both authored iteration caps are set — build.review.max_iterations and
+            build.review.additional.max_iterations.
     """
     build = context.config.build
 
@@ -38,8 +45,18 @@ def build_presets(context: ConfigAmendment):
     strategy = review.strategy if review is not None else None
 
     if strategy is not None and strategy != "short":
-        raise ValueError(_CONFLICT_MESSAGE)
+        raise ValueError(_STRATEGY_CONFLICT_MESSAGE)
+
+    review_iterations = review.max_iterations if review is not None else None
+
+    additional = review.additional if review is not None else None
+    additional_iterations = additional.max_iterations if additional is not None else None
+
+    if review_iterations is not None and additional_iterations is not None:
+        raise ValueError(_ITERATIONS_CONFLICT_MESSAGE)
+
+    external_iterations = 3 if review_iterations is None else review_iterations
 
     context.set("build.review.strategy", "short")
     context.set("build.review.additional.patience", 1)
-    context.set("build.review.additional.max_iterations", 3)
+    context.set("build.review.additional.max_iterations", external_iterations)

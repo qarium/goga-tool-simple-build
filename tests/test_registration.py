@@ -38,7 +38,7 @@ class StandinAmendment:
 class StandinAdditional:
     """Stand-in of the authored review additional settings."""
 
-    def __init__(self, patience: int, max_iterations: int) -> None:
+    def __init__(self, patience: int | None = None, max_iterations: int | None = None) -> None:
         self.patience = patience
         self.max_iterations = max_iterations
 
@@ -46,8 +46,14 @@ class StandinAdditional:
 class StandinReview:
     """Stand-in of the authored review settings with None-able branches."""
 
-    def __init__(self, strategy: str | None = None, additional: StandinAdditional | None = None) -> None:
+    def __init__(
+        self,
+        strategy: str | None = None,
+        max_iterations: int | None = None,
+        additional: StandinAdditional | None = None,
+    ) -> None:
         self.strategy = strategy
+        self.max_iterations = max_iterations
         self.additional = additional
 
 
@@ -159,8 +165,85 @@ def test_build_presets_authored_empty_strategy_is_conflict():
     assert amendment.buffered == []
 
 
-def test_build_presets_read_footprint_is_guard_leaf_only():
-    """Reads only the build.review.strategy chain and no neighboring leaf from the tree."""
+@pytest.mark.parametrize("authored_iterations", [7, 0, -1, 999])
+def test_build_presets_maps_authored_review_iterations_into_external_cap(authored_iterations):
+    """Maps the authored review-level iteration cap verbatim into the third preset."""
+    review = StandinReview(max_iterations=authored_iterations)
+    amendment = StandinAmendment(config=StandinConfig(build=StandinBuild(review=review)))
+
+    registration.build_presets(context=amendment)
+
+    assert amendment.buffered == [
+        ("build.review.strategy", "short"),
+        ("build.review.additional.patience", 1),
+        ("build.review.additional.max_iterations", authored_iterations),
+    ]
+
+
+def test_build_presets_maps_review_iterations_with_silent_additional_leaf():
+    """Maps the review-level cap when the additional branch exists but its leaf is silent."""
+    review = StandinReview(
+        max_iterations=7,
+        additional=StandinAdditional(patience=None, max_iterations=None),
+    )
+    amendment = StandinAmendment(config=StandinConfig(build=StandinBuild(review=review)))
+
+    registration.build_presets(context=amendment)
+
+    assert ("build.review.additional.max_iterations", 7) in amendment.buffered
+
+
+def test_build_presets_keeps_default_cap_when_only_additional_authored():
+    """Keeps the default cap 3 in the buffer when only the additional leaf is authored."""
+    review = StandinReview(additional=StandinAdditional(patience=None, max_iterations=9))
+    amendment = StandinAmendment(config=StandinConfig(build=StandinBuild(review=review)))
+
+    registration.build_presets(context=amendment)
+
+    assert ("build.review.additional.max_iterations", 3) in amendment.buffered
+
+
+@pytest.mark.parametrize(
+    ("review_iterations", "additional_iterations"),
+    [(7, 15), (0, 15), (7, 0), (-1, 1)],
+)
+def test_build_presets_raises_when_both_iteration_caps_authored(review_iterations, additional_iterations):
+    """Raises ValueError naming both paths, never the values, before any set call."""
+    review = StandinReview(
+        max_iterations=review_iterations,
+        additional=StandinAdditional(patience=4, max_iterations=additional_iterations),
+    )
+    amendment = StandinAmendment(config=StandinConfig(build=StandinBuild(review=review)))
+
+    with pytest.raises(ValueError, match=r"build\.review\.max_iterations") as excinfo:
+        registration.build_presets(context=amendment)
+
+    message = str(excinfo.value)
+    assert "build.review.max_iterations" in message
+    assert "build.review.additional.max_iterations" in message
+    assert str(review_iterations) not in message
+    assert str(additional_iterations) not in message
+    assert amendment.buffered == []
+
+
+def test_build_presets_strategy_conflict_takes_precedence_over_iteration_conflict():
+    """Raises the strategy conflict first when both conflicts are authored together."""
+    review = StandinReview(
+        strategy="thorough",
+        max_iterations=7,
+        additional=StandinAdditional(patience=4, max_iterations=15),
+    )
+    amendment = StandinAmendment(config=StandinConfig(build=StandinBuild(review=review)))
+
+    with pytest.raises(ValueError, match=r"build\.review\.strategy") as excinfo:
+        registration.build_presets(context=amendment)
+
+    assert "build.review.max_iterations" not in str(excinfo.value)
+    assert amendment.buffered == []
+
+
+def test_build_presets_conflict_read_footprint_is_guard_leaf_only():
+    """Reads only the build.review.strategy chain before the conflict raise, nothing else."""
     review_level = RecordingLevel(
         {
             "strategy": "thorough",
@@ -185,3 +268,37 @@ def test_build_presets_read_footprint_is_guard_leaf_only():
     assert build_level.reads == ["review"]
     assert review_level.reads == ["strategy"]
     assert amendment.buffered == []
+
+
+def test_build_presets_read_footprint_is_guard_and_iteration_chains_only():
+    """Reads exactly the strategy guard chain and the two iteration-cap chains on the happy path."""
+    additional_level = RecordingLevel({"max_iterations": 9, "patience": 4, "agent": "codex"})
+    review_level = RecordingLevel(
+        {
+            "strategy": "short",
+            "max_iterations": None,
+            "agent": "claude",
+            "additional": additional_level,
+        }
+    )
+    build_level = RecordingLevel({"review": review_level, "agent": "claude"})
+    config_level = RecordingLevel(
+        {
+            "build": build_level,
+            "pipeline": RecordingLevel({"name": "release"}),
+            "topics": RecordingLevel({"items": []}),
+        }
+    )
+    amendment = StandinAmendment(config=config_level)
+
+    registration.build_presets(context=amendment)
+
+    assert config_level.reads == ["build"]
+    assert build_level.reads == ["review"]
+    assert review_level.reads == ["strategy", "max_iterations", "additional"]
+    assert additional_level.reads == ["max_iterations"]
+    assert amendment.buffered == [
+        ("build.review.strategy", "short"),
+        ("build.review.additional.patience", 1),
+        ("build.review.additional.max_iterations", 3),
+    ]
