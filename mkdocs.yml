@@ -41,3 +41,7 @@ nav:
 
 plugins:
   - search
+
+markdown_extensions:
+  - pymdownx.highlight
+  - pymdownx.superfences
